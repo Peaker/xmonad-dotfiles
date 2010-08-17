@@ -2,20 +2,21 @@
 
 import XMonad(xmonad, XConfig(..),
               KeyMask, mod4Mask, controlMask,
-              (.|.), spawn, sendMessage, kill)
+              (.|.), spawn, sendMessage, kill,
+              (-->), composeAll, title, (=?), doShift)
 import qualified XMonad as K
-import XMonad.Config.Xfce(xfceConfig)
--- import XMonad.Layout
--- import XMonad.Layout.Tabbed
+import XMonad.Config.Gnome(gnomeConfig)
 import XMonad.Layout.NoBorders(smartBorders)
 import XMonad.Layout.WindowNavigation(windowNavigation, Navigate(Go, Swap))
--- import XMonad.Hooks.ManageDocks
-import XMonad.Util.EZConfig
--- import XMonad.Hooks.EwmhDesktops
+import XMonad.Hooks.ManageHelpers(isFullscreen, doFullFloat)
 import Control.Monad.Trans(MonadIO)
-
+import XMonad.Util.EZConfig
 import XMonad.Util.ToggleMaster(newToggleMasterContext, toggleMasterFocus, toggleSwapMasterFocus)
 import XMonad.Util.DirKeys(ljikDirs,arrowDirs)
+-- import XMonad.Layout
+-- import XMonad.Layout.Tabbed
+-- import XMonad.Hooks.ManageDocks
+-- import XMonad.Hooks.EwmhDesktops
 
 meta :: KeyMask
 meta = mod4Mask
@@ -24,7 +25,7 @@ cmeta :: KeyMask
 cmeta = meta .|. controlMask
 
 dzenCmd :: String -> String
-dzenCmd msg = "echo " ++ msg ++ " | dzen2 -p 2 -w 180 -h 50 "
+dzenCmd msg = "notify-send -t 1500 \"" ++ msg ++ "\""
 
 -- dzen :: (MonadIO m) => String -> m ()
 -- dzen = spawn . dzenCmd
@@ -37,8 +38,13 @@ main = do
   context <- newToggleMasterContext
   xmonad $ myConfig context
 
-myConfig context = xfceConfig {
-    layoutHook = windowNavigation . smartBorders $ layoutHook xfceConfig
+myConfig context = gnomeConfig {
+    layoutHook = windowNavigation . smartBorders $ layoutHook gnomeConfig
+  , manageHook = composeAll
+                 [ manageHook gnomeConfig
+                 , title =? "foo" --> doShift "2"
+                 , isFullscreen --> doFullFloat
+                 ]
   , borderWidth = 3
   , modMask = meta
   , workspaces = map show [(1::Int) .. 6]
